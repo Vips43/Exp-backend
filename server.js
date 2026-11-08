@@ -39,6 +39,7 @@ app.use(
       "https://localhost",
       "https://expense-traker-neon.vercel.app",
       "capacitor://localhost",
+      "https://exp-client-eight.vercel.app",
     ],
     credentials: true,
   }),
