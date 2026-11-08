@@ -1,0 +1,61 @@
+import express from "express";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+
+import authRoutes from "./routes/authRoutes.js";
+import connectDB from "./config/conn.js";
+import expenseRoutes from "./routes/expenseRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
+import { protect } from "./middleware/authMiddleware.js";
+
+dotenv.config();
+const PORT = 3000;
+const app = express();
+
+// Replace your existing if/else block with this:
+const mongo_url =
+  process.env.NODE_ENV === "production"
+    ? process.env.MONGO_URI
+    : process.env.MONGO_LOCAL;
+
+if (!mongo_url) {
+  console.error(
+    "FATAL ERROR: MONGO_URL is not defined in environment variables.",
+  );
+  process.exit(1);
+}
+
+connectDB(mongo_url);
+
+app.use(express.json());
+app.use(morgan("dev"));
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://localhost",
+      "https://expense-traker-neon.vercel.app",
+      "capacitor://localhost",
+    ],
+    credentials: true,
+  }),
+);
+
+app.use("/api/auth", authRoutes);
+app.use("/api", protect, expenseRoutes);
+app.use("/api", protect, reportRoutes);
+
+app.get("/api/ping", (req, res) => {
+  res.send("ping test succeed");
+});
+
+export default app;
+
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log("Server started on: ", PORT);
+  });
+}
