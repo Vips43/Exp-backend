@@ -1,16 +1,21 @@
 import jwt from "jsonwebtoken";
 
 export const protect = async (req, res, next) => {
-  let token = req.cookies["exp-token"];
+  const token =
+    req.cookies?.["exp-token"] ||
+    (req.headers.authorization?.startsWith("Bearer ")
+      ? req.headers.authorization.split(" ")[1]
+      : null);
 
   if (!token) {
-    return res.status(401).json({ msg: "No token provided" });
+    return res.status(401).json({ msg: "Unauthorized: No token provided" });
   }
+
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     next();
-  } catch (error) {
-    return res.status(401).json({ msg: "token expired" });
+  } catch (err) {
+    return res.status(401).json({ msg: "Invalid or expired token" });
   }
 };
